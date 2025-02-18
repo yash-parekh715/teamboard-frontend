@@ -1,0 +1,24 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/usr/local/app
+      - /usr/local/app/node_modules
+    environment:
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+    develop:
+      watch:
+        - path: .
+          target: /usr/local/app
+          action: sync
+        - path: ./package.json
+          action: rebuild
+        - path: ./package-lock.json
+          action: rebuild
