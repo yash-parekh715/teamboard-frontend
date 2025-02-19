@@ -29,12 +29,12 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSwitchToLogin }) => {
       <form className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Username
+            Name
           </label>
           <input
             type="text"
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
-            placeholder="Choose a username"
+            placeholder="Enter your name"
           />
         </div>
 
