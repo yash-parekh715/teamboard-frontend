@@ -1,9 +1,43 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { GoogleIcon } from "../components/UI/Icons";
+import authService from "../services/api/authService";
 import LoginFormProps from "../components/Interfaces/LoginFormProps";
+// import { useNavigate } from "react-router-dom";
+import ErrorAlert from "./ErrorAlert";
 
 const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToSignup }) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>("");
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await authService.login({ email, password });
+
+      if (response.success) {
+        // Redirect to dashboard on successful login
+        console.log("Login successful", response);
+      } else {
+        setError("Login failed. Please check your credentials.");
+      }
+    } catch (err: any) {
+      setError(
+        err.response?.data?.message || "Failed to login. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+  const handleGoogleLogin = async () => {
+    // This functionality is not implemented in the backend yet
+    setError("Google login is not implemented in the backend yet.");
+  };
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -11,8 +45,14 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToSignup }) => {
       className="space-y-6"
       id="login"
     >
+      {error && <ErrorAlert error={error} onClose={() => setError(null)} />}
+
       <div className="space-y-4">
-        <button className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 rounded-lg p-3 hover:bg-gray-50 transition-colors">
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 rounded-lg p-3 hover:bg-gray-50 transition-colors"
+        >
           <GoogleIcon className="text-xl" />
           <span className="text-gray-700 font-medium">
             Continue with Google
@@ -29,15 +69,18 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToSignup }) => {
         </div>
       </div>
 
-      <form className="space-y-4">
+      <form className="space-y-4" onSubmit={handleLogin}>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Email
           </label>
           <input
             type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
             placeholder="Enter your email"
+            required
           />
         </div>
 
@@ -47,16 +90,22 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToSignup }) => {
           </label>
           <input
             type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
             placeholder="Enter your password"
+            required
           />
         </div>
 
         <button
           type="submit"
-          className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors font-medium"
+          disabled={loading}
+          className={`w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors font-medium ${
+            loading ? "opacity-70 cursor-not-allowed" : ""
+          }`}
         >
-          Log in
+          {loading ? "Loading..." : "Login"}
         </button>
       </form>
       <p className="text-center text-sm text-gray-600">
