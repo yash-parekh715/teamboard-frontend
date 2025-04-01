@@ -1,4 +1,3 @@
-// src/ui/Button.tsx (Reusable Button Component)
 import { motion } from "framer-motion";
 
 import { HTMLMotionProps } from "framer-motion";

@@ -5,7 +5,15 @@ import {
   Image,
   StickyNote,
   Menu,
+  Trash2,
+  Plus,
   X,
+  ArrowLeft,
+  Save,
+  Circle,
+  Square,
+  Pen,
+  User,
 } from "lucide-react";
 import IconProps from "../Interfaces/IconProps";
 import { FcGoogle } from "react-icons/fc";
@@ -66,6 +74,52 @@ export const LockIcon = ({ className, size = 24, color }: IconProps) => (
   <CiLock className={className} size={size} color={color} />
 );
 
+export const TrashIcon = ({ className, size = 24, color }: IconProps) => (
+  <Trash2 className={className} size={size} color={color} />
+);
+
+export const PlusIcon = ({ className, size = 24, color }: IconProps) => (
+  <Plus className={className} size={size} color={color} />
+);
+
+export const ArrowLeftIcon = ({ className, size = 24, color }: IconProps) => (
+  <ArrowLeft className={className} size={size} color={color} />
+);
+
+export const SaveIcon = ({ className, size = 24, color }: IconProps) => (
+  <Save className={className} size={size} color={color} />
+);
+
+export const CircleIcon = ({ className, size = 24, color }: IconProps) => (
+  <Circle className={className} size={size} color={color} />
+);
+
+export const SquareIcon = ({ className, size = 24, color }: IconProps) => (
+  <Square className={className} size={size} color={color} />
+);
+
+export const PenIcon = ({ className, size = 24, color }: IconProps) => (
+  <Pen className={className} size={size} color={color} />
+);
+
+export const TypeIcon = ({ className, size = 24, color }: IconProps) => (
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M4 6h16M4 12h16m-7 6h7"
+    />
+  </svg>
+);
+export const UsersIcon = ({ className, size = 24, color }: IconProps) => (
+  <User className={className} size={size} color={color} />
+);
 // Export default object for convenient imports
 const Icons = {
   Menu: MenuIcon,
@@ -81,6 +135,8 @@ const Icons = {
   Linkedin: LinkedInIcon,
   Twitter: TwitterIcon,
   Lock: LockIcon,
+  Trash: TrashIcon,
+  Plus: PlusIcon,
 };
 
 export default Icons;

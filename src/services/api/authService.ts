@@ -19,7 +19,14 @@ const authService = {
 
     return response.data;
   },
-
+  handleGoogleRedirect: async () => {
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      // Verify token with backend if needed
+      return true;
+    }
+    return false;
+  },
   // Login with Google
   loginWithGoogle: async (tokenId: string) => {
     const response = await apiClient.post<AuthResponse>("/auth/google", {
@@ -33,6 +40,21 @@ const authService = {
     }
 
     return response.data;
+  },
+
+  fetchUserProfile: async () => {
+    try {
+      const response = await apiClient.get("/auth/me");
+
+      if (response.data.user) {
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+        return response.data.user;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      return null;
+    }
   },
 
   // Register new user

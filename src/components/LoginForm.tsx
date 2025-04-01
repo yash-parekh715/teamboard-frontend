@@ -1,19 +1,54 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { GoogleIcon } from "../components/UI/Icons";
 import authService from "../services/api/authService";
 import LoginFormProps from "../components/Interfaces/LoginFormProps";
+import { useNavigate } from "react-router-dom";
 // import { useNavigate } from "react-router-dom";
 import ErrorAlert from "./ErrorAlert";
+// import { useAuth } from "../context/AuthContext";
 
 const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToSignup }) => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>("");
 
+  useEffect(() => {
+    const initializeGoogle = () => {
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      if (window.google && clientId) {
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: handleGoogleResponse,
+        });
+      }
+    };
+    initializeGoogle();
+  }, []);
+  const handleGoogleResponse = async (response: any) => {
+    const { credential } = response;
+    setLoading(true);
+    setError(null);
+    try {
+      const authResponse = await authService.loginWithGoogle(credential);
+      if (authResponse.success) {
+        navigate("/");
+      } else {
+        setError("Google login failed. Please try again.");
+      }
+    } catch (err) {
+      setError("Failed to authenticate with Google. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    // await login(email, password);
+
     setLoading(true);
     setError("");
 
@@ -34,9 +69,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToSignup }) => {
       setLoading(false);
     }
   };
-  const handleGoogleLogin = async () => {
-    // This functionality is not implemented in the backend yet
-    setError("Google login is not implemented in the backend yet.");
+  const handleGoogleLogin = () => {
+    window.location.href = `${
+      import.meta.env.VITE_API_BASE_URL
+    }/auth/google?redirect_uri=${import.meta.env.VITE_GOOGLE_REDIRECT_URI}`;
   };
   return (
     <motion.div
@@ -100,7 +136,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToSignup }) => {
 
         <button
           type="submit"
-          disabled={loading}
+          // disabled={loading}
           className={`w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors font-medium ${
             loading ? "opacity-70 cursor-not-allowed" : ""
           }`}
