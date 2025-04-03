@@ -21,7 +21,7 @@ export interface DrawingElement {
   type: "line" | "rectangle" | "circle" | "text" | "path" | "eraser";
   points: number[];
   text?: string;
-  font?: string;
+  fontFamily?: string;
   fontSize?: number;
   fontColor?: string;
   bold?: boolean;
@@ -29,6 +29,7 @@ export interface DrawingElement {
   underline?: boolean;
   color: string;
   lineWidth: number;
+  isDragging?: boolean;
   creator?: string; // User ID who created the element
   createdAt?: Date;
 }

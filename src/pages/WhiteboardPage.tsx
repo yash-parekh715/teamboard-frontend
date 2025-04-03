@@ -1,4 +1,3 @@
-// src/pages/WhiteboardPage.tsx
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -20,13 +19,17 @@ import {
   EraserIcon,
 } from "../components/UI/Icons";
 
+// Import the TextEditorModal component (needs to be created separately)
+import TextEditorModal from "../components/UI/TextEditorModal";
+
 const WhiteboardPage: React.FC = () => {
   const { canvasId } = useParams<{ canvasId: string }>();
   const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const elementsRef = useRef<DrawingElement[]>([]);
+  const currentElementRef = useRef<DrawingElement | null>(null);
   const [ctx, setCtx] = useState<CanvasRenderingContext2D | null>(null);
   const [elements, setElements] = useState<DrawingElement[]>([]);
-  const elementsRef = useRef<DrawingElement[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [tool, setTool] = useState<
     "pen" | "rectangle" | "circle" | "text" | "path" | "eraser"
@@ -41,8 +44,22 @@ const WhiteboardPage: React.FC = () => {
   const [currentElement, setCurrentElement] = useState<DrawingElement | null>(
     null
   );
-  const currentElementRef = useRef<DrawingElement | null>(null);
 
+  // New state variables for text editing
+  const [showTextEditor, setShowTextEditor] = useState(false);
+  const [selectedTextElement, setSelectedTextElement] =
+    useState<DrawingElement | null>(null);
+  const [pendingTextPosition, setPendingTextPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+  const [isDraggingText, setIsDraggingText] = useState(false);
+  const [draggingElementId, setDraggingElementId] = useState<string | null>(
+    null
+  );
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+
+  // Keep refs in sync with state
   useEffect(() => {
     elementsRef.current = elements;
   }, [elements]);
@@ -50,117 +67,6 @@ const WhiteboardPage: React.FC = () => {
   useEffect(() => {
     currentElementRef.current = currentElement;
   }, [currentElement]);
-
-  // Initialize canvas context and socket connection
-  useEffect(() => {
-    const initializeCanvas = async () => {
-      try {
-        const response = await canvasService.getCanvasById(canvasId!);
-        console.log(response);
-        if (response.status === 200) {
-          console.log(response.data);
-          const canvas = response.data as Canvas;
-          setElements(canvas.data?.elements || []);
-          redrawCanvas(canvas.data?.elements || []);
-        }
-      } catch (err) {
-        setError("Failed to load canvas");
-      }
-    };
-
-    const setupCanvasContext = () => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-
-      const context = canvas.getContext("2d");
-      if (!context) return;
-
-      context.lineCap = "round";
-      context.lineJoin = "round";
-      setCtx(context);
-    };
-
-    const setupSocket = () => {
-      try {
-        const socket = initSocket(canvasId!);
-
-        socket.on("connect", () => {
-          setIsConnected(true);
-          socket.emit("join-canvas", { canvasId: canvasId! });
-        });
-
-        socket.on("disconnect", () => setIsConnected(false));
-
-        socket.on("canvas-data", (data) => {
-          setElements(data.elements || []);
-          redrawCanvas(data.elements || []);
-        });
-
-        socket.on("draw-element", (element) => {
-          setElements((prev) => {
-            if (prev.some((el) => el.id === element.id)) return prev;
-            return [...prev, element];
-          });
-          drawElement(element);
-        });
-
-        socket.on("update-element", ({ elementId, updates }) => {
-          setElements((prev) =>
-            prev.map((el) => (el.id === elementId ? { ...el, ...updates } : el))
-          );
-          redrawCanvas();
-        });
-
-        socket.on("delete-element", ({ elementId }) => {
-          setElements((prev) => prev.filter((el) => el.id !== elementId));
-          redrawCanvas();
-        });
-
-        socket.on("user-joined", (user) => {
-          setActiveUsers((prev) => [...prev, user]);
-        });
-
-        socket.on("user-left", (userId) => {
-          setActiveUsers((prev) => prev.filter((u) => u.userId !== userId));
-        });
-
-        socket.on(
-          "active-users" as any,
-          (users: { userId: string; name: string }[]) => {
-            setActiveUsers(users);
-          }
-        );
-
-        socket.on("error", (error) => {
-          setError(error.message);
-        });
-
-        return () => {
-          socket.off("connect");
-          socket.off("disconnect");
-          socket.off("canvas-data");
-          socket.off("draw-element");
-          socket.off("update-element");
-          socket.off("delete-element");
-          socket.off("user-joined");
-          socket.off("user-left");
-          socket.off("active-users" as any);
-          socket.off("error");
-        };
-      } catch (error) {
-        setError("Failed to initialize socket connection");
-      }
-    };
-
-    initializeCanvas();
-    setupCanvasContext();
-    const socketCleanup = setupSocket();
-
-    return () => {
-      socketCleanup?.();
-      disconnectSocket();
-    };
-  }, [canvasId]);
 
   // Canvas drawing functions
   const redrawCanvas = useCallback(
@@ -184,9 +90,11 @@ const WhiteboardPage: React.FC = () => {
 
       switch (element.type) {
         case "text":
-          ctx.font = `${element.bold ? "bold" : ""} ${
-            element.italic ? "italic" : ""
-          } ${element.fontSize}px ${element.font}`;
+          // Enhanced text rendering with proper formatting
+          const fontStyle = `${element.bold ? "bold " : ""}${
+            element.italic ? "italic " : ""
+          }${element.fontSize || 16}px ${element.fontFamily || "Arial"}`;
+          ctx.font = fontStyle;
           ctx.fillStyle = element.color;
           ctx.fillText(
             element.text || "",
@@ -249,11 +157,207 @@ const WhiteboardPage: React.FC = () => {
     [ctx]
   );
 
+  // Initialize canvas context and socket connection
+  useEffect(() => {
+    const setupCanvasContext = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      const context = canvas.getContext("2d");
+      if (!context) return;
+
+      context.lineCap = "round";
+      context.lineJoin = "round";
+      setCtx(context);
+    };
+
+    setupCanvasContext();
+  }, []);
+
+  // Initialize socket and canvas data
+  useEffect(() => {
+    if (!canvasId) return;
+
+    const initializeCanvas = async () => {
+      try {
+        const response = await canvasService.getCanvasById(canvasId);
+        if (response.status === 200) {
+          const canvas = response.data as Canvas;
+          // Initialize with saved elements
+          if (canvas.data?.elements) {
+            setElements(canvas.data.elements);
+          }
+        }
+      } catch (err) {
+        setError("Failed to load canvas");
+      }
+    };
+
+    const setupSocket = () => {
+      try {
+        // Ensure any existing socket is disconnected first
+        disconnectSocket();
+
+        const socket = initSocket(canvasId);
+
+        socket.on("connect", () => {
+          setIsConnected(true);
+          // Request latest canvas data when connected
+          socket.emit("join-canvas", { canvasId });
+          // Request the current list of active users
+          socket.emit("get-active-users", { canvasId });
+        });
+
+        socket.on("disconnect", () => {
+          setIsConnected(false);
+        });
+
+        socket.on("canvas-data", (data) => {
+          if (data && data.elements) {
+            setElements(data.elements);
+            redrawCanvas(data.elements);
+          }
+        });
+
+        socket.on("draw-element", (element) => {
+          // Add new element from other users and redraw
+          setElements((prev) => {
+            if (prev.some((el) => el.id === element.id)) return prev;
+            const newElements = [...prev, element];
+            // Schedule a redraw with the new elements
+            setTimeout(() => redrawCanvas(newElements), 0);
+            return newElements;
+          });
+        });
+
+        socket.on("update-element", ({ elementId, updates }) => {
+          setElements((prev) => {
+            const updatedElements = prev.map((el) =>
+              el.id === elementId ? { ...el, ...updates } : el
+            );
+            // Schedule a redraw with the updated elements
+            setTimeout(() => redrawCanvas(updatedElements), 0);
+            return updatedElements;
+          });
+        });
+
+        socket.on("delete-element", ({ elementId }) => {
+          setElements((prev) => {
+            const filteredElements = prev.filter((el) => el.id !== elementId);
+            // Schedule a redraw with the filtered elements
+            setTimeout(() => redrawCanvas(filteredElements), 0);
+            return filteredElements;
+          });
+        });
+
+        socket.on("user-joined", (user) => {
+          setActiveUsers((prev) => {
+            // Check if user already exists and remove them first to avoid duplicates
+            const filteredUsers = prev.filter((u) => u.userId !== user.userId);
+            return [...filteredUsers, user];
+          });
+        });
+
+        socket.on("user-left", (userId) => {
+          setActiveUsers((prev) => prev.filter((u) => u.userId !== userId));
+        });
+
+        socket.on("active-users", (users) => {
+          // Use the correct event name without type casting
+          setActiveUsers(users);
+        });
+
+        socket.on("error", (error) => {
+          setError(error.message);
+        });
+        socket.on("clear-canvas", () => {
+          setElements([]);
+          if (ctx && canvasRef.current) {
+            ctx.clearRect(
+              0,
+              0,
+              canvasRef.current.width,
+              canvasRef.current.height
+            );
+          }
+        });
+
+        return () => {
+          socket.off("connect");
+          socket.off("disconnect");
+          socket.off("canvas-data");
+          socket.off("clear-canvas");
+          socket.off("draw-element");
+          socket.off("update-element");
+          socket.off("delete-element");
+          socket.off("user-joined");
+          socket.off("user-left");
+          socket.off("active-users");
+          socket.off("error");
+          disconnectSocket();
+        };
+      } catch (error) {
+        setError("Failed to initialize socket connection");
+        return () => {};
+      }
+    };
+
+    // Load initial canvas data and then set up the socket
+    initializeCanvas().then(setupSocket);
+
+    // Clean up function for the effect
+    return () => {
+      disconnectSocket();
+    };
+  }, [canvasId, redrawCanvas]);
+
+  // Redraw canvas when elements change
+  useEffect(() => {
+    redrawCanvas(elements);
+  }, [elements, redrawCanvas]);
+
   // Drawing handlers
   const startDrawing = (e: React.MouseEvent) => {
     if (!ctx || !canvasRef.current) return;
 
     const { offsetX, offsetY } = e.nativeEvent;
+
+    // Check if we're clicking on an existing text element
+    if (!isDrawing) {
+      const clickedElement = elements.find((element) => {
+        if (element.type === "text") {
+          // Simple hit testing for text elements
+          const textWidth = ctx.measureText(element.text || "").width;
+          const textHeight = element.fontSize || 16;
+          return (
+            offsetX >= element.points[0] &&
+            offsetX <= element.points[0] + textWidth &&
+            offsetY >= element.points[1] - textHeight &&
+            offsetY <= element.points[1]
+          );
+        }
+        return false;
+      });
+
+      if (clickedElement?.type === "text") {
+        // If text element clicked, prepare for dragging
+        setDraggingElementId(clickedElement.id);
+        setDragOffset({
+          x: offsetX - clickedElement.points[0],
+          y: offsetY - clickedElement.points[1],
+        });
+        setIsDraggingText(true);
+        return;
+      }
+    }
+
+    // For text tool, open the text editor modal
+    if (tool === "text") {
+      setPendingTextPosition({ x: offsetX, y: offsetY });
+      setShowTextEditor(true);
+      return;
+    }
+
     setIsDrawing(true);
 
     const newElement: DrawingElement = {
@@ -264,30 +368,34 @@ const WhiteboardPage: React.FC = () => {
       lineWidth: tool === "eraser" ? 20 : lineWidth,
     };
 
-    if (tool === "text") {
-      const text = prompt("Enter text:");
-      if (text) {
-        const textElement: DrawingElement = {
-          ...newElement,
-          type: "text",
-          text,
-          points: [offsetX, offsetY],
-        };
-        setElements((prev) => [...prev, textElement]);
-        getSocket()?.emit("draw-element", {
-          canvasId: canvasId!,
-          element: textElement,
-        });
-        saveCanvasState();
-      }
-      setIsDrawing(false);
-      return;
-    }
-
     setCurrentElement(newElement);
   };
 
   const continueDrawing = (e: React.MouseEvent) => {
+    // Handle text element dragging
+    if (isDraggingText && draggingElementId) {
+      const { offsetX, offsetY } = e.nativeEvent;
+
+      setElements((prev) =>
+        prev.map((el) => {
+          if (el.id === draggingElementId) {
+            return {
+              ...el,
+              points: [
+                offsetX - dragOffset.x,
+                offsetY - dragOffset.y,
+                ...el.points.slice(2), // Keep any other points if they exist
+              ],
+            };
+          }
+          return el;
+        })
+      );
+
+      redrawCanvas();
+      return;
+    }
+
     if (!isDrawing || !currentElementRef.current || !ctx) return;
 
     const { offsetX, offsetY } = e.nativeEvent;
@@ -315,10 +423,35 @@ const WhiteboardPage: React.FC = () => {
   };
 
   const endDrawing = () => {
+    // Handle text element dragging end
+    if (isDraggingText && draggingElementId) {
+      const updatedElement = elements.find((el) => el.id === draggingElementId);
+
+      if (updatedElement) {
+        // Emit the updated position to other users
+        getSocket()?.emit("update-element", {
+          canvasId: canvasId!,
+          elementId: draggingElementId,
+          updates: {
+            points: updatedElement.points,
+          },
+        });
+
+        // Save the canvas state
+        saveCanvasState();
+      }
+
+      setIsDraggingText(false);
+      setDraggingElementId(null);
+      return;
+    }
+
     if (!isDrawing || !currentElementRef.current) return;
 
     setIsDrawing(false);
     const finalElement = currentElementRef.current;
+
+    // Add to local elements and emit to server
     setElements((prev) => [...prev, finalElement]);
     getSocket()?.emit("draw-element", {
       canvasId: canvasId!,
@@ -326,6 +459,99 @@ const WhiteboardPage: React.FC = () => {
     });
     saveCanvasState();
     setCurrentElement(null);
+  };
+
+  // Add double-click handler for editing text
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    if (!ctx || !canvasRef.current) return;
+
+    const { offsetX, offsetY } = e.nativeEvent;
+
+    // Find if we're double-clicking on a text element
+    const textElement = elements.find((element) => {
+      if (element.type === "text") {
+        const textWidth = ctx.measureText(element.text || "").width;
+        const textHeight = element.fontSize || 16;
+        return (
+          offsetX >= element.points[0] &&
+          offsetX <= element.points[0] + textWidth &&
+          offsetY >= element.points[1] - textHeight &&
+          offsetY <= element.points[1]
+        );
+      }
+      return false;
+    });
+
+    if (textElement) {
+      // Open text editor with the existing text data
+      setSelectedTextElement(textElement);
+      setShowTextEditor(true);
+    }
+  };
+
+  // Handle saving text from the editor
+  const handleSaveText = (textData: {
+    text: string;
+    fontFamily: string;
+    fontSize: number;
+    bold: boolean;
+    italic: boolean;
+    underline: boolean;
+    color: string;
+  }) => {
+    if (selectedTextElement) {
+      // Update existing text element
+      const updates = {
+        text: textData.text,
+        fontFamily: textData.fontFamily,
+        fontSize: textData.fontSize,
+        bold: textData.bold,
+        italic: textData.italic,
+        underline: textData.underline,
+        color: textData.color,
+      };
+
+      setElements((prev) =>
+        prev.map((el) =>
+          el.id === selectedTextElement.id ? { ...el, ...updates } : el
+        )
+      );
+
+      // Emit update to other users
+      getSocket()?.emit("update-element", {
+        canvasId: canvasId!,
+        elementId: selectedTextElement.id,
+        updates,
+      });
+
+      setSelectedTextElement(null);
+    } else if (pendingTextPosition) {
+      // Create new text element
+      const newTextElement: DrawingElement = {
+        id: Date.now().toString(),
+        type: "text",
+        points: [pendingTextPosition.x, pendingTextPosition.y],
+        text: textData.text,
+        fontFamily: textData.fontFamily,
+        fontSize: textData.fontSize,
+        bold: textData.bold,
+        italic: textData.italic,
+        underline: textData.underline,
+        color: textData.color,
+        lineWidth: 1,
+      };
+
+      // Add to local elements and emit to server
+      setElements((prev) => [...prev, newTextElement]);
+      getSocket()?.emit("draw-element", {
+        canvasId: canvasId!,
+        element: newTextElement,
+      });
+
+      setPendingTextPosition(null);
+    }
+
+    saveCanvasState();
   };
 
   // Canvas saving with debounce
@@ -339,7 +565,7 @@ const WhiteboardPage: React.FC = () => {
       } catch (err) {
         setError("Failed to save canvas");
       }
-    }, 500);
+    }, 1);
 
     return () => clearTimeout(debounceTimer);
   }, [canvasId]);
@@ -350,8 +576,15 @@ const WhiteboardPage: React.FC = () => {
       if (ctx && canvasRef.current) {
         ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
         setElements([]);
+
+        // First emit clear-canvas to notify other users
         getSocket()?.emit("clear-canvas", { canvasId: canvasId! });
-        saveCanvasState();
+
+        // Then immediately save the empty state to the server
+        getSocket()?.emit("save-canvas", {
+          canvasId: canvasId!,
+          data: { elements: [] },
+        });
       }
     }
   };
@@ -415,12 +648,6 @@ const WhiteboardPage: React.FC = () => {
               </button>
             </div>
 
-            {/* <input
-              type="color"
-              value={color}
-              onChange={(e) => setColor(e.target.value)}
-              className="w-10 h-10 rounded cursor-pointer border border-gray-300"
-            /> */}
             <input
               type="color"
               value={color}
@@ -460,14 +687,20 @@ const WhiteboardPage: React.FC = () => {
 
         <div className="flex gap-4">
           <div className="bg-white p-3 rounded-lg shadow w-48">
-            <h3 className="font-medium mb-2">Active Users</h3>
+            <h3 className="font-medium mb-2">
+              Active Users ({activeUsers.length})
+            </h3>
             <ul className="space-y-1">
-              {activeUsers.map((user) => (
-                <li key={user.userId} className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-green-500" />
-                  <span className="truncate">{user.name}</span>
-                </li>
-              ))}
+              {activeUsers.length > 0 ? (
+                activeUsers.map((user) => (
+                  <li key={user.userId} className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500" />
+                    <span className="truncate">{user.name}</span>
+                  </li>
+                ))
+              ) : (
+                <li className="text-gray-500 text-sm">No active users</li>
+              )}
             </ul>
           </div>
 
@@ -480,9 +713,31 @@ const WhiteboardPage: React.FC = () => {
             onMouseMove={continueDrawing}
             onMouseUp={endDrawing}
             onMouseLeave={endDrawing}
+            onDoubleClick={handleDoubleClick}
           />
         </div>
       </div>
+
+      {/* Text Editor Modal */}
+      {showTextEditor && (
+        <TextEditorModal
+          onClose={() => {
+            setShowTextEditor(false);
+            setSelectedTextElement(null);
+            setPendingTextPosition(null);
+          }}
+          onSave={handleSaveText}
+          initialText={selectedTextElement?.text || ""}
+          initialStyle={{
+            fontFamily: selectedTextElement?.fontFamily || "Arial",
+            fontSize: selectedTextElement?.fontSize || 16,
+            bold: selectedTextElement?.bold || false,
+            italic: selectedTextElement?.italic || false,
+            underline: selectedTextElement?.underline || false,
+            color: selectedTextElement?.color || color,
+          }}
+        />
+      )}
     </div>
   );
 };
