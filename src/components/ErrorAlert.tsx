@@ -2,7 +2,7 @@ import React from "react";
 import Icons from "./UI/Icons";
 import { BiErrorCircle } from "react-icons/bi";
 import { useState, useEffect } from "react";
-import { ErrorAlertProps } from "./Interfaces/ErrorAlertPRops";
+import { ErrorAlertProps } from "./Interfaces/ErrorAlertProps";
 
 const ErrorAlert: React.FC<ErrorAlertProps> = ({
   error,

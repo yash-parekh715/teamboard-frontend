@@ -14,7 +14,6 @@ const CreateCanvasModal: React.FC<CreateCanvasModalProps> = ({
   isOpen,
   onClose,
   onCreate,
-  ...props
 }) => {
   const [canvasName, setCanvasName] = useState("");
 
@@ -54,41 +53,6 @@ const CreateCanvasModal: React.FC<CreateCanvasModalProps> = ({
         </div>
       </form>
     </Form>
-    // <Form
-    //   isOpen={isOpen}
-    //   onClose={onClose}
-    //   title="Create New Canvas"
-    //   // overlayClass="backdrop-blur-sm bg-black/30"
-    //   // modalClass="bg-white/90 backdrop-blur-xl border border-purple-100 rounded-2xl"
-    // >
-    //   <form onSubmit={handleSubmit} className="space-y-6">
-    //     <div>
-    //       <label className="block text-sm font-medium text-gray-600 mb-2">
-    //         Canvas Name
-    //       </label>
-    //       <input
-    //         type="text"
-    //         className="w-full px-4 py-3 border-2 border-purple-100 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
-    //         placeholder="Enter canvas name"
-    //       />
-    //     </div>
-
-    //     <div className="flex justify-end gap-3">
-    //       <Button
-    //         variant="secondary"
-    //         className="bg-white/50 backdrop-blur-sm border border-purple-200 text-purple-600 hover:bg-purple-50"
-    //       >
-    //         Cancel
-    //       </Button>
-    //       <Button
-    //         variant="primary"
-    //         className="bg-purple-600 hover:bg-purple-700 shadow-lg hover:shadow-purple-500/30"
-    //       >
-    //         Create Canvas
-    //       </Button>
-    //     </div>
-    //   </form>
-    // </Form>
   );
 };
 

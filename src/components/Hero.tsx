@@ -1,8 +1,13 @@
-// components/Hero.tsx
 import { motion } from "framer-motion";
 import Button from "../components/UI/Buttons";
 import Icons from "../components/UI/Icons";
-import HeroProps from "../components/Interfaces/HeroProps";
+import { useUser } from "../contexts/UserContext";
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+
+interface HeroProps {
+  onGetStartedClick: () => void;
+}
 
 const FloatingElement = ({
   children,
@@ -33,6 +38,31 @@ const FloatingElement = ({
 );
 
 const Hero: React.FC<HeroProps> = ({ onGetStartedClick }) => {
+  const { user, loading } = useUser();
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Add effect to properly set authentication status after loading
+  useEffect(() => {
+    if (!loading) {
+      setIsAuthenticated(!!user);
+      console.log("Auth status updated:", !!user);
+    }
+  }, [user, loading]);
+
+  const handleGetStarted = (e: React.MouseEvent) => {
+    e.preventDefault();
+    console.log("Get started clicked, auth status:", isAuthenticated);
+
+    if (isAuthenticated) {
+      // User is authenticated, navigate to dashboard
+      navigate("/dashboard");
+    } else {
+      // User is not authenticated, open signup modal
+      onGetStartedClick();
+    }
+  };
+
   return (
     <section className="pt-20 sm:pt-36 md:pt-32 pb-16 relative overflow-hidden">
       {/* Background Pattern */}
@@ -112,9 +142,11 @@ const Hero: React.FC<HeroProps> = ({ onGetStartedClick }) => {
           >
             <Button
               className="px-5 py-3 rounded-lg font-medium transition-all bg-purple-600 text-white shadow-lg hover:shadow-purple-500/50 group w-auto"
-              onClick={onGetStartedClick}
+              onClick={handleGetStarted}
             >
-              <span className="relative z-10">Get Started</span>
+              <span className="relative z-10">
+                {isAuthenticated ? "Go to Dashboard" : "Get Started"}
+              </span>
               <motion.span
                 className="absolute inset-0 bg-purple-700 rounded-lg"
                 initial={{ scale: 0 }}

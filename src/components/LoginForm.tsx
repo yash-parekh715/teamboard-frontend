@@ -1,53 +1,22 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { GoogleIcon } from "../components/UI/Icons";
 import authService from "../services/api/authService";
 import LoginFormProps from "../components/Interfaces/LoginFormProps";
 import { useNavigate } from "react-router-dom";
-// import { useNavigate } from "react-router-dom";
 import ErrorAlert from "./ErrorAlert";
-// import { useAuth } from "../context/AuthContext";
+import { useUser } from "../contexts/UserContext";
 
 const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToSignup }) => {
   const navigate = useNavigate();
+  const { refreshUser } = useUser();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>("");
 
-  useEffect(() => {
-    const initializeGoogle = () => {
-      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-      if (window.google && clientId) {
-        window.google.accounts.id.initialize({
-          client_id: clientId,
-          callback: handleGoogleResponse,
-        });
-      }
-    };
-    initializeGoogle();
-  }, []);
-  const handleGoogleResponse = async (response: any) => {
-    const { credential } = response;
-    setLoading(true);
-    setError(null);
-    try {
-      const authResponse = await authService.loginWithGoogle(credential);
-      if (authResponse.success) {
-        navigate("/");
-      } else {
-        setError("Google login failed. Please try again.");
-      }
-    } catch (err) {
-      setError("Failed to authenticate with Google. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // await login(email, password);
 
     setLoading(true);
     setError("");
@@ -57,6 +26,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToSignup }) => {
 
       if (response.success) {
         // Redirect to dashboard on successful login
+        await refreshUser();
+        navigate("/dashboard");
         console.log("Login successful", response);
       } else {
         setError("Login failed. Please check your credentials.");

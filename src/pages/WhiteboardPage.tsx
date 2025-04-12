@@ -19,7 +19,6 @@ import {
   EraserIcon,
 } from "../components/UI/Icons";
 
-// Import the TextEditorModal component (needs to be created separately)
 import TextEditorModal from "../components/UI/TextEditorModal";
 
 const WhiteboardPage: React.FC = () => {

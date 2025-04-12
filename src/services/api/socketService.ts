@@ -1,21 +1,6 @@
 import { io, Socket } from "socket.io-client";
 import { Canvas, DrawingElement } from "../../components/Interfaces/Canvas";
 
-// interface ServerToClientEvents {
-//   "canvas-data": (data: Canvas["data"]) => void;
-//   "draw-element": (element: DrawingElement) => void;
-//   "update-element": (data: {
-//     elementId: string;
-//     updates: Partial<DrawingElement>;
-//   }) => void;
-//   "delete-element": (data: { elementId: string }) => void;
-//   "user-joined": (user: { userId: string; name: string }) => void;
-//   "user-left": (userId: string) => void;
-//   "canvas-saved": () => void;
-//   "clear-canvas": () => void;
-//   error: (error: { message: string }) => void;
-// }
-
 interface ServerToClientEvents {
   "canvas-data": (data: Canvas["data"]) => void;
   "draw-element": (element: DrawingElement) => void;
@@ -31,18 +16,6 @@ interface ServerToClientEvents {
   "active-users": (users: { userId: string; name: string }[]) => void;
   error: (error: { message: string }) => void;
 }
-// interface ClientToServerEvents {
-//   "join-canvas": (data: { canvasId: string }) => void;
-//   "draw-element": (data: { canvasId: string; element: DrawingElement }) => void;
-//   "update-element": (data: {
-//     canvasId: string;
-//     elementId: string;
-//     updates: Partial<DrawingElement>;
-//   }) => void;
-//   "delete-element": (data: { canvasId: string; elementId: string }) => void;
-//   "save-canvas": (data: { canvasId: string; data: Canvas["data"] }) => void;
-//   "clear-canvas": (data: { canvasId: string }) => void;
-// }
 
 interface ClientToServerEvents {
   "join-canvas": (data: { canvasId: string }) => void;
@@ -72,21 +45,12 @@ export const initSocket = (canvasId: string): AppSocket => {
     socket = null;
   }
 
-  const token = localStorage.getItem("authToken");
-
-  if (!token) {
-    console.error("No auth token found");
-    throw new Error("Authentication required");
-  }
-
   socket = io(`${import.meta.env.VITE_WS_URL}`, {
     query: {
       canvasId,
       transport: "websocket",
     },
-    auth: {
-      token,
-    },
+    withCredentials: true,
   });
 
   // Debug events

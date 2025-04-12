@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { GoogleIcon } from "../components/UI/Icons";
 import SignupFormProps from "./Interfaces/SignupFormProps";
 import ErrorAlert from "./ErrorAlert";
 import { useNavigate } from "react-router-dom";
 import authService from "../services/api/authService";
-// import { useAuth } from "../context/AuthContext";
+import { useUser } from "../contexts/UserContext";
 
 const SignupForm: React.FC<SignupFormProps> = ({ onSwitchToLogin }) => {
   const navigate = useNavigate();
+  const { refreshUser } = useUser();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  // const { signup, loginWithGoogle, loading, error, clearError } = useAuth();
 
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>("");
@@ -27,6 +27,8 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSwitchToLogin }) => {
 
       if (response.success) {
         // Redirect to dashboard on successful signup
+        await refreshUser();
+        navigate("/dashboard");
         console.log("User signed up successfully");
       } else {
         setError("Registration failed. Please try again.");
@@ -39,39 +41,9 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSwitchToLogin }) => {
       setLoading(false);
     }
   };
-  useEffect(() => {
-    const initializeGoogle = () => {
-      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-      if (window.google && clientId) {
-        window.google.accounts.id.initialize({
-          client_id: clientId,
-          callback: handleGoogleResponse,
-        });
-      }
-    };
-    initializeGoogle();
-  }, []);
-  const handleGoogleResponse = async (response: any) => {
-    const { credential } = response;
-    setLoading(true);
-    setError(null);
-    try {
-      const authResponse = await authService.loginWithGoogle(credential);
-      if (authResponse.success) {
-        navigate("/");
-      } else {
-        setError("Google login failed. Please try again.");
-      }
-    } catch (err) {
-      setError("Failed to authenticate with Google. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+
   const handleGoogleLogin = () => {
-    window.location.href = `${
-      import.meta.env.VITE_API_BASE_URL
-    }/auth/google?redirect_uri=${import.meta.env.VITE_GOOGLE_REDIRECT_URI}`;
+    window.location.href = `${import.meta.env.VITE_API_BASE_URL}/auth/google`;
   };
   return (
     <motion.div

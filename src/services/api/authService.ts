@@ -11,13 +11,15 @@ const authService = {
       credentials
     );
 
-    // Store auth data
-    if (response.data.token) {
-      localStorage.setItem("authToken", response.data.token);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
-    }
-
     return response.data;
+  },
+  logout: async () => {
+    try {
+      await apiClient.post("/auth/logout");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+    window.location.href = "/";
   },
   handleGoogleRedirect: async () => {
     const token = localStorage.getItem("authToken");
@@ -45,15 +47,10 @@ const authService = {
   fetchUserProfile: async () => {
     try {
       const response = await apiClient.get("/auth/me");
-
-      if (response.data.user) {
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-        return response.data.user;
-      }
-      return null;
+      return response.data; // This should return the user object
     } catch (error) {
       console.error("Error fetching user profile:", error);
-      return null;
+      throw error;
     }
   },
 
@@ -64,33 +61,35 @@ const authService = {
       credentials
     );
 
-    // Store auth data
-    if (response.data.token) {
-      localStorage.setItem("authToken", response.data.token);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
-    }
-
     return response.data;
   },
 
-  // Logout user
-  logout: () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("user");
+  checkAuthStatus: async () => {
+    try {
+      const response = await apiClient.get("/auth/me");
+      return response.data;
+    } catch (error) {
+      return null;
+    }
   },
 
   // Get current authenticated user
-  getCurrentUser: () => {
-    const userStr = localStorage.getItem("user");
-    if (userStr) {
-      return JSON.parse(userStr);
+  getCurrentUser: async () => {
+    try {
+      const response = await apiClient.get("/auth/me");
+      return response.data;
+    } catch (error) {
+      return null;
     }
-    return null;
   },
 
-  // Check if user is logged in
-  isAuthenticated: () => {
-    return !!localStorage.getItem("authToken");
+  isAuthenticated: async () => {
+    try {
+      const user = await authService.checkAuthStatus();
+      return !!user;
+    } catch {
+      return false;
+    }
   },
 };
 

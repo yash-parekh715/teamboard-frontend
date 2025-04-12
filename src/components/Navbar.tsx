@@ -1,17 +1,39 @@
 import { motion } from "framer-motion";
 import Button from "../components/UI/Buttons";
-import NavbarProps from "./Interfaces/NavbarProps";
 import { useState, useEffect } from "react";
 import Logo from "./UI/Logo";
+import { useUser } from "../contexts/UserContext";
+import { useNavigate } from "react-router-dom";
+import authService from "../services/api/authService";
+
+interface NavbarProps {
+  onLoginClick?: () => void;
+  onSignupClick?: () => void;
+}
 
 const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onSignupClick }) => {
   const [scrollY, setScrollY] = useState(0);
+  const { user } = useUser();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleStartAnnotating = () => {
+    navigate("/dashboard");
+  };
+
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+      window.location.href = "/"; // Force a full page reload
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
   const navVariants = {
     hidden: { y: -100, opacity: 0 },
@@ -47,33 +69,69 @@ const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onSignupClick }) => {
           <Logo />
 
           <div className="flex items-center space-x-2 sm:space-x-3">
-            <motion.div
-              variants={buttonVariants}
-              whileHover="hover"
-              whileTap="tap"
-              transition={{ duration: 0.2 }}
-            >
-              <Button
-                className="text-sm sm:text-base bg-transparent text-gray-700 hover:bg-transparent shadow-sm hover:shadow-lg border border-purple-500 hover:shadow-purple-500/25 px-2 py-1 rounded-lg font-normal transition-all transform-gpu"
-                onClick={onLoginClick}
-              >
-                Login
-              </Button>
-            </motion.div>
+            {user ? (
+              // Authenticated user buttons
+              <>
+                <motion.div
+                  variants={buttonVariants}
+                  whileHover="hover"
+                  whileTap="tap"
+                  transition={{ duration: 0.2 }}
+                >
+                  <Button
+                    className="text-sm sm:text-base bg-transparent text-gray-700 hover:bg-transparent shadow-sm hover:shadow-lg border border-purple-500 hover:shadow-purple-500/25 px-2 py-1 rounded-lg font-normal transition-all transform-gpu"
+                    onClick={handleStartAnnotating}
+                  >
+                    Start Annotating
+                  </Button>
+                </motion.div>
 
-            <motion.div
-              variants={buttonVariants}
-              whileHover="hover"
-              whileTap="tap"
-              transition={{ duration: 0.2 }}
-            >
-              <Button
-                className="px-3 py-2 rounded-lg font-medium transition-all bg-purple-600 text-white shadow-lg hover:shadow-purple-500/50 text-sm sm:text-base transform-gpu"
-                onClick={onSignupClick}
-              >
-                SignUp
-              </Button>
-            </motion.div>
+                <motion.div
+                  variants={buttonVariants}
+                  whileHover="hover"
+                  whileTap="tap"
+                  transition={{ duration: 0.2 }}
+                >
+                  <Button
+                    className="px-3 py-2 rounded-lg font-medium transition-all bg-purple-600 border border-red-500 text-white shadow-lg hover:shadow-red-400/50 text-sm sm:text-base transform-gpu"
+                    onClick={handleLogout}
+                  >
+                    Logout
+                  </Button>
+                </motion.div>
+              </>
+            ) : (
+              // Unauthenticated user buttons
+              <>
+                <motion.div
+                  variants={buttonVariants}
+                  whileHover="hover"
+                  whileTap="tap"
+                  transition={{ duration: 0.2 }}
+                >
+                  <Button
+                    className="text-sm sm:text-base bg-transparent text-gray-700 hover:bg-transparent shadow-sm hover:shadow-lg border border-purple-500 hover:shadow-purple-500/25 px-2 py-1 rounded-lg font-normal transition-all transform-gpu"
+                    onClick={onLoginClick}
+                  >
+                    Login
+                  </Button>
+                </motion.div>
+
+                <motion.div
+                  variants={buttonVariants}
+                  whileHover="hover"
+                  whileTap="tap"
+                  transition={{ duration: 0.2 }}
+                >
+                  <Button
+                    className="px-3 py-2 rounded-lg font-medium transition-all bg-purple-600 text-white shadow-lg hover:shadow-purple-500/50 text-sm sm:text-base transform-gpu"
+                    onClick={onSignupClick}
+                  >
+                    SignUp
+                  </Button>
+                </motion.div>
+              </>
+            )}
           </div>
         </div>
       </div>

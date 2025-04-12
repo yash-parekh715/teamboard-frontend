@@ -14,6 +14,7 @@ import {
   Square,
   Pen,
   User,
+  Search,
 } from "lucide-react";
 import IconProps from "../Interfaces/IconProps";
 import { FcGoogle } from "react-icons/fc";
@@ -102,7 +103,7 @@ export const PenIcon = ({ className, size = 24, color }: IconProps) => (
   <Pen className={className} size={size} color={color} />
 );
 
-export const TypeIcon = ({ className, size = 24, color }: IconProps) => (
+export const TypeIcon = ({ className }: IconProps) => (
   <svg
     className={className}
     fill="none"
@@ -120,6 +121,27 @@ export const TypeIcon = ({ className, size = 24, color }: IconProps) => (
 export const UsersIcon = ({ className, size = 24, color }: IconProps) => (
   <User className={className} size={size} color={color} />
 );
+
+export const FilterIcon = ({ className }: IconProps) => (
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M4 6h16M4 12h16m-7 6h7"
+    />
+  </svg>
+);
+
+export const SearchIcon = ({ className, size = 24, color }: IconProps) => (
+  <Search className={className} size={size} color={color} />
+);
+
 // Export default object for convenient imports
 const Icons = {
   Menu: MenuIcon,
@@ -137,6 +159,8 @@ const Icons = {
   Lock: LockIcon,
   Trash: TrashIcon,
   Plus: PlusIcon,
+  TrashIcon: TrashIcon,
+  FilterIcon: FilterIcon,
 };
 
 export default Icons;

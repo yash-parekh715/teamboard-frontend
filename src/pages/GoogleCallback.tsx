@@ -1,29 +1,43 @@
 // src/pages/GoogleCallback.tsx
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import authService from "../services/api/authService";
+import { useUser } from "../contexts/UserContext";
 
 const GoogleCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { refreshUser } = useUser();
 
   useEffect(() => {
-    const token = searchParams.get("token");
-    if (token) {
-      // Store token and user data
-      localStorage.setItem("authToken", token);
+    const error = searchParams.get("error");
 
-      // Fetch user details or decode token if needed
-      // For now, just redirect to dashboard
-      navigate("/");
-    } else {
-      navigate("/");
+    if (error) {
+      console.error("Authentication error:", error);
+      navigate("/", {
+        state: { error: "Authentication failed" },
+      });
+      return;
     }
-  }, [searchParams, navigate]);
+
+    const checkAuthStatus = async () => {
+      try {
+        await refreshUser();
+        navigate("/dashboard");
+      } catch (error) {
+        console.error("Error checking auth status:", error);
+        navigate("/"); // Redirect to login page if there's an error
+      }
+    };
+
+    checkAuthStatus();
+  }, [navigate, searchParams, refreshUser]);
 
   return (
-    <div className="flex justify-center items-center min-h-screen">
-      <p className="text-lg">Processing Google login...</p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600 mx-auto"></div>
+        <p className="mt-4 text-gray-600">Processing authentication...</p>
+      </div>
     </div>
   );
 };
