@@ -1,5 +1,4 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
-import { useNavigate } from "react-router-dom";
 import authService from "../services/api/authService";
 
 export interface UserInfo {
@@ -27,7 +26,6 @@ const UserContext = createContext<UserContextType>({
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const navigate = useNavigate();
   const [user, setUser] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -48,7 +46,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       await authService.logout();
       setUser(null);
-      navigate("/"); // Redirect to the landing page after logout
+      window.location.href = "/"; // Redirect to the landing page after logout
     } catch (error) {
       console.error("Logout failed:", error);
     }
