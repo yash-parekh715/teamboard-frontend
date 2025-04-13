@@ -13,8 +13,35 @@ const apiClient: AxiosInstance = axios.create({
 });
 
 // Request interceptor for adding auth token
+// apiClient.interceptors.request.use(
+//   (config) => {
+//     return config;
+//   },
+//   (error) => {
+//     return Promise.reject(error);
+//   }
+// );
+
+// Request interceptor for adding auth token
 apiClient.interceptors.request.use(
   (config) => {
+    // Try to get token from cookie via JavaScript (may not work due to HttpOnly)
+    const cookies = document.cookie.split(";");
+    let authToken = null;
+
+    for (const cookie of cookies) {
+      const [name, value] = cookie.trim().split("=");
+      if (name === "authToken") {
+        authToken = value;
+        break;
+      }
+    }
+
+    // If token exists in cookie, add it as a header
+    if (authToken) {
+      config.headers["Authorization"] = `Bearer ${authToken}`;
+    }
+
     return config;
   },
   (error) => {
