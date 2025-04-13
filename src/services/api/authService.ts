@@ -19,7 +19,7 @@ const authService = {
     } catch (error) {
       console.error("Logout error:", error);
     }
-    window.location.href = "/";
+    // window.location.href = "/";
   },
   handleGoogleRedirect: async () => {
     const token = localStorage.getItem("authToken");
