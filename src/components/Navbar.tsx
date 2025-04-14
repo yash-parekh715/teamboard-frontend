@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Logo from "./UI/Logo";
 import { useUser } from "../contexts/UserContext";
 import { useNavigate } from "react-router-dom";
-import authService from "../services/api/authService";
 
 interface NavbarProps {
   onLoginClick?: () => void;
@@ -13,7 +12,7 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onSignupClick }) => {
   const [scrollY, setScrollY] = useState(0);
-  const { user } = useUser();
+  const { user, logout } = useUser();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,8 +27,8 @@ const Navbar: React.FC<NavbarProps> = ({ onLoginClick, onSignupClick }) => {
 
   const handleLogout = async () => {
     try {
-      await authService.logout();
-      window.location.href = "/"; // Force a full page reload
+      await logout(); // Clear user state in context
+      // window.location.href = "/"; // Force a full page reload
     } catch (error) {
       console.error("Logout failed:", error);
     }

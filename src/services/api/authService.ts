@@ -15,7 +15,7 @@ const authService = {
   },
   logout: async () => {
     try {
-      await apiClient.post("/auth/logout");
+      await apiClient.post("/auth/logout")
     } catch (error) {
       console.error("Logout error:", error);
     }

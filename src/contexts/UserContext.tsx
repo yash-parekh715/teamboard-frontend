@@ -46,7 +46,20 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       await authService.logout();
       setUser(null);
-      window.location.href = "/"; // Redirect to the landing page after logout
+      document.cookie =
+        "authToken=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+
+      // Try with different SameSite settings
+      document.cookie =
+        "authToken=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax";
+      document.cookie =
+        "authToken=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=None; Secure";
+
+      // For production domains, try clearing with domain specified
+      const hostname = window.location.hostname;
+      if (hostname !== "localhost" && hostname !== "127.0.0.1") {
+        document.cookie = `authToken=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${hostname}`;
+      }
     } catch (error) {
       console.error("Logout failed:", error);
     }
