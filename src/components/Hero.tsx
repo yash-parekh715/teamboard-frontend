@@ -4,7 +4,8 @@ import Icons from "../components/UI/Icons";
 import { useUser } from "../contexts/UserContext";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { AiFillFire } from "react-icons/ai";
+// import { AiFillFire } from "react-icons/ai";
+import { AiOutlineFire } from "react-icons/ai";
 import { LockIconSVG } from "../components/UI/Icons";
 
 interface HeroProps {
@@ -167,7 +168,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStartedClick }) => {
           >
             <div className="text-center">
               <h3 className="text-2xl sm:text-3xl font-bold text-purple-600">
-                <AiFillFire className="w-full flex items-center h-[39.5px] font-black" />
+                <AiOutlineFire className="w-full flex items-center h-[39.5px] font-black" />
               </h3>
               <p className="text-sm sm:text-base text-gray-600">
                 Low on Latency and High on Performance
@@ -183,7 +184,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStartedClick }) => {
               </p>
             </div>
             <div className="text-center hidden md:block">
-              <h3 className="text-2xl sm:text-3xl font-bold text-purple-600">
+              <h3 className="text-2xl sm:text-3xl font-semibold text-purple-600">
                 99.9%
               </h3>
               <p className="text-sm sm:text-base text-gray-600">Uptime</p>
