@@ -4,6 +4,8 @@ import Icons from "../components/UI/Icons";
 import { useUser } from "../contexts/UserContext";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { AiFillFire } from "react-icons/ai";
+import { LockIconSVG } from "../components/UI/Icons";
 
 interface HeroProps {
   onGetStartedClick: () => void;
@@ -165,16 +167,19 @@ const Hero: React.FC<HeroProps> = ({ onGetStartedClick }) => {
           >
             <div className="text-center">
               <h3 className="text-2xl sm:text-3xl font-bold text-purple-600">
-                10k+
-              </h3>
-              <p className="text-sm sm:text-base text-gray-600">Active Teams</p>
-            </div>
-            <div className="text-center">
-              <h3 className="text-2xl sm:text-3xl font-bold text-purple-600">
-                1M+
+                <AiFillFire className="w-full flex items-center h-[39.5px] font-black" />
               </h3>
               <p className="text-sm sm:text-base text-gray-600">
-                Whiteboards Created
+                Low on Latency and High on Performance
+              </p>
+            </div>
+            <div className="text-center">
+              <h1 className="text-2xl sm:text-3xl  text-purple-600 font-extrabold">
+                {/* <FaLock className="w-full flex items-center h-[39.5px]" /> */}
+                <LockIconSVG className="w-full flex items-center h-[40.5px]" />
+              </h1>
+              <p className="text-sm sm:text-base text-gray-600">
+                Highly Secure & Reliable
               </p>
             </div>
             <div className="text-center hidden md:block">

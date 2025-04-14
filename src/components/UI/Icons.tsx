@@ -142,6 +142,24 @@ export const SearchIcon = ({ className, size = 24, color }: IconProps) => (
   <Search className={className} size={size} color={color} />
 );
 
+export const LockIconSVG = ({ className }: IconProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="28"
+    height="28"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="3"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    className={className}
+  >
+    <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </svg>
+);
+
 // Export default object for convenient imports
 const Icons = {
   Menu: MenuIcon,
