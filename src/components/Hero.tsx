@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 // import { AiFillFire } from "react-icons/ai";
 import { AiOutlineFire } from "react-icons/ai";
-import { LockIconSVG } from "../components/UI/Icons";
+import { LockIcon } from "../components/UI/Icons";
 
 interface HeroProps {
   onGetStartedClick: () => void;
@@ -168,23 +168,28 @@ const Hero: React.FC<HeroProps> = ({ onGetStartedClick }) => {
           >
             <div className="text-center">
               <h3 className="text-2xl sm:text-3xl font-bold text-purple-600">
-                <AiOutlineFire className="w-full flex items-center h-[39.5px] font-black" />
+                <AiOutlineFire
+                  className="flex items-center w-full h-[40.5px] "
+                  style={{
+                    filter: "drop-shadow(0 0 1px rgb(147, 51, 234))",
+                    strokeWidth: 2,
+                  }}
+                />
               </h3>
               <p className="text-sm sm:text-base text-gray-600">
                 Low on Latency and High on Performance
               </p>
             </div>
             <div className="text-center">
-              <h1 className="text-2xl sm:text-3xl  text-purple-600 font-extrabold">
-                {/* <FaLock className="w-full flex items-center h-[39.5px]" /> */}
-                <LockIconSVG className="w-full flex items-center h-[40.5px]" />
+              <h1 className="text-2xl sm:text-3xl text-purple-600 font-black">
+                <LockIcon className="w-full flex items-center h-[40.5px] font-black text-xl stroke-1" />
               </h1>
               <p className="text-sm sm:text-base text-gray-600">
                 Highly Secure & Reliable
               </p>
             </div>
             <div className="text-center hidden md:block">
-              <h3 className="text-2xl sm:text-3xl font-semibold text-purple-600">
+              <h3 className="text-2xl sm:text-3xl font-bold text-purple-600">
                 99.9%
               </h3>
               <p className="text-sm sm:text-base text-gray-600">Uptime</p>
